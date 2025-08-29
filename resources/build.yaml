@@ -1,0 +1,10 @@
+apps:
+  - name: myservice
+    repo: "git@github.com:myorg/myservice.git"
+    ref: "develop"
+    path: "/Users/john/dev/myservice"   # explicit path
+
+  - name: orderservice
+    repo: "git@github.com:myorg/orderservice.git"
+    ref: "v1.2.3"
+    # no path → defaults to {base_dir}/orderservice

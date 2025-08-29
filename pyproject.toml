@@ -1,0 +1,28 @@
+[project]
+name = "composor"
+version = "0.1.0"
+description = "A lightweight build & deployment orchestrator for Docker Compose apps"
+authors = [
+    { name = "Industware s.r.o, 2025", email = "info@industware.cloud" },
+]
+
+packages = [{include = "composor", from = "src"}]
+requires-python = ">=3.10"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyyaml = "^6.0"
+
+[tool.poetry.scripts]
+build-manager = "composor.build_manager:main"
+deploy-manager = "composor.deploy_manager:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+black = "^24.4.2"
+flake8 = "^7.1.0"
+mypy = "^1.10.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
