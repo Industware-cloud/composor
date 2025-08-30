@@ -68,7 +68,13 @@ def get_env_file(
     return env_files[-1]  # latest
 
 
-def deploy(env_file: Path, compose_files: List[str], restart: bool, dry: bool):
+def deploy(
+    env_file: Path,
+    compose_files: List[str],
+    restart: bool,
+    stop: bool = False,
+    dry: bool = False,
+):
     """Run docker compose up/down based on env file."""
     compose_cmd = check_docker_compose()
 
@@ -79,14 +85,16 @@ def deploy(env_file: Path, compose_files: List[str], restart: bool, dry: bool):
 
     if restart:
         cmd.extend(["up", "-d", "--force-recreate"])
+    elif stop:
+        cmd.extend(["down"])
     else:
         cmd.extend(["up", "-d"])
 
-    logger.info(f"Deploying with env: {env_file}")
+    logger.info(f"Using env: {env_file}")
     logger.info("Running: " + " ".join(cmd))
 
     if not dry:
-        subprocess.run(cmd, check=True)
+        run_cmd(cmd)
 
 
 def main():
@@ -114,6 +122,12 @@ def main():
         action="store_true",
         help="Restart containers with --force-recreate",
     )
+    parser.add_argument(
+        "--stop",
+        action="store_true",
+        help="Stop all containers",
+    )
+
     parser.add_argument("--list", action="store_true", help="List available env files")
     parser.add_argument("--dry", action="store_true", help="Dry run mode")
     args = parser.parse_args()
@@ -136,7 +150,7 @@ def main():
         logger.error("No env file found.")
         return
 
-    deploy(env_file, args.compose, args.restart, args.dry)
+    deploy(env_file, args.compose, args.restart, args.stop, args.dry)
 
 
 if __name__ == "__main__":
