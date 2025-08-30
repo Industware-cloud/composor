@@ -19,11 +19,9 @@ from .utils import run_cmd
 
 logger = logging.getLogger(__name__)
 
-
-def clone_or_update_repo(app, base_dir, dry=False) -> int:
+def clone_or_update_repo(app, app_path: Path, dry=False) -> int:
     repo_url = app["repo"]
     app_name = app["name"]
-    app_path = Path(app.get("path") or Path(base_dir) / app_name).expanduser().resolve()
 
     if app_path.exists():
         logger.info(f"Updating existing repo for {app_name} at {app_path}")
@@ -35,9 +33,8 @@ def clone_or_update_repo(app, base_dir, dry=False) -> int:
         return run_cmd(["git", "clone", repo_url, str(app_path)], dry)
 
 
-def build_docker_image(app, base_dir, dry=False) -> str:
+def build_docker_image(app, app_path: Path, dry=False) -> str:
     app_name = app["name"]
-    app_path = Path(app.get("path") or Path(base_dir) / app_name).expanduser().resolve()
 
     if not dry:
         result = subprocess.run(
@@ -122,8 +119,13 @@ def main(arg_list: Optional[list[str]] = None):
     app_images = {}
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     for app in config.get("apps", []):
-        clone_or_update_repo(app, args.base_dir, dry=args.dry)
-        image_tag = build_docker_image(app, args.base_dir, dry=args.dry)
+        # Determine app_path
+        if "path" in app and app["path"]:
+            app_path = Path(app["path"]).expanduser().resolve() / app["name"]
+        else:
+            app_path = Path(args.base_dir).expanduser().resolve() / app["name"]
+        clone_or_update_repo(app, app_path, dry=args.dry)
+        image_tag = build_docker_image(app, app_path, dry=args.dry)
         app_images[app["name"]] = image_tag
 
     if not app_images:
