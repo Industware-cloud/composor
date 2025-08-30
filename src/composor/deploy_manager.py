@@ -10,9 +10,10 @@ import argparse
 import logging
 import os
 import shutil
-import subprocess
 from pathlib import Path
 from typing import Optional, List
+
+from composor.utils import run_cmd
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,14 +26,9 @@ def check_docker_compose():
     elif shutil.which("docker"):
         # Check if "docker compose" is available (newer plugin)
         try:
-            subprocess.run(
-                ["docker", "compose", "version"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-            )
+            run_cmd(["docker", "compose", "version"], capture_output=True, text=True)
             return "docker compose"
-        except subprocess.CalledProcessError:
+        except FileNotFoundError:
             pass
     raise RuntimeError(
         "Neither `docker compose` nor `docker-compose` is installed on this system."
