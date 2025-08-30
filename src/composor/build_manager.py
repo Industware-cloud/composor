@@ -15,7 +15,7 @@ from typing import Optional
 import yaml
 from pathlib import Path
 from datetime import datetime
-from utils import run_cmd
+from .utils import run_cmd
 
 logger = logging.getLogger(__name__)
 
