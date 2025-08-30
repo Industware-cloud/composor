@@ -13,7 +13,7 @@ def test_build_creates_env_and_report(tmp_path):
     config_path = tmp_path / "apps.yaml"
     config_data = {
         "apps": [
-            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None,
+            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None, "ref": "main",
              "build_cmd": "echo build_app1"}
         ]
     }
@@ -21,10 +21,11 @@ def test_build_creates_env_and_report(tmp_path):
         yaml.dump(config_data, f)
 
     env_dir = tmp_path / "envs"
-    print(f"{config_path}")
     # Mock run_cmd to avoid running actual git/docker
-    with patch("composor.build_manager.run_cmd") as mock_run:
+    with patch("composor.utils.git.run_cmd") as mock_run, \
+        patch("composor.build_manager.run_cmd") as mock_run2:
         mock_run.return_value = "git-hash-123"
+        mock_run2.return_value = 0
 
         build_manager.main([
             "--config", str(config_path),
@@ -51,7 +52,7 @@ def test_build_creates_env_and_report_dry(tmp_path):
     config_path = tmp_path / "apps.yaml"
     config_data = {
         "apps": [
-            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None,
+            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None, "ref": "main",
              "build_cmd": "echo build_app1"}
         ]
     }
@@ -59,9 +60,8 @@ def test_build_creates_env_and_report_dry(tmp_path):
         yaml.dump(config_data, f)
 
     env_dir = tmp_path / "envs"
-    print(f"{config_path}")
     # Mock run_cmd to avoid running actual git/docker
-    with patch("composor.build_manager.run_cmd") as mock_run:
+    with patch("composor.utils.git.run_cmd") as mock_run:
         mock_run.return_value = "git-hash-123"
 
         build_manager.main([
@@ -83,7 +83,7 @@ def test_main_calls_git_clone(tmp_path):
     config_path = tmp_path / "apps.yaml"
     apps_config = {
         "apps": [
-            {"name": "app1", "repo": "https://github.com/example/repo.git", "path": None,
+            {"name": "app1", "repo": "https://github.com/example/repo.git", "path": None, "ref": "main",
              "build_cmd": "echo build_app1"}
         ]
     }
@@ -93,7 +93,7 @@ def test_main_calls_git_clone(tmp_path):
     env_dir = tmp_path / "envs"
     env_dir.mkdir()
 
-    with patch("composor.build_manager.run_cmd") as mock_run:
+    with patch("composor.utils.git.run_cmd") as mock_run:
         # call main with arguments
         build_manager.main([
             "--config", str(config_path),
@@ -103,7 +103,6 @@ def test_main_calls_git_clone(tmp_path):
         ])
 
         # Check that git clone was attempted
-        print(f"{mock_run.call_args_list}")
         clone_calls = [
             c for c in mock_run.call_args_list
             if c.args and isinstance(c.args[0], list) and "git" in c.args[0] and "clone" in c.args[0]

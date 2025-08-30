@@ -15,36 +15,26 @@ from typing import Optional
 import yaml
 from pathlib import Path
 from datetime import datetime
+
+from composor.utils.git import GitRepo
 from .utils import run_cmd
 
 logger = logging.getLogger(__name__)
 
 def clone_or_update_repo(app, app_path: Path, dry=False) -> int:
     repo_url = app["repo"]
-    app_name = app["name"]
+    ref =  app["ref"]
 
-    if app_path.exists():
-        logger.info(f"Updating existing repo for {app_name} at {app_path}")
-        return run_cmd(["git", "-C", str(app_path), "pull"], dry)
-    else:
-        logger.info(f"Cloning repo for {app_name} into {app_path}")
-        if not dry:
-            app_path.parent.mkdir(parents=True, exist_ok=True)
-        return run_cmd(["git", "clone", repo_url, str(app_path)], dry)
+    repo = GitRepo(repo_url, app_path, dry=dry)
+
+    return repo.ensure_ref(ref)
 
 
 def build_docker_image(app, app_path: Path, dry=False) -> str:
     app_name = app["name"]
 
-    if not dry:
-        result = subprocess.run(
-            ["git", "-C", str(app_path), "rev-parse", "--short", "HEAD"],
-            capture_output=True,
-            text=True,
-        )
-        git_hash = result.stdout.strip()
-    else:
-        git_hash = "DRY"
+    repo = GitRepo(app["repo"], app_path, dry=dry)
+    git_hash = repo.get_sha_head()
 
     image_tag = f"{app_name}:{git_hash}"
     logger.info(f"Building Docker image {image_tag}")
