@@ -25,13 +25,18 @@ def test_build_creates_env_and_report(tmp_path):
     with patch("composor.utils.git.run_cmd") as mock_run, \
         patch("composor.build_manager.run_cmd") as mock_run2:
         mock_run.return_value = "git-hash-123"
-        mock_run2.return_value = 0
+        mock_run2.return_value = ""
 
         build_manager.main([
             "--config", str(config_path),
             "--base-dir", str(tmp_path),
             "--env-dir", str(env_dir),
         ])
+        clone_calls = [
+            c for c in mock_run2.call_args_list
+            if c.args and isinstance(c.args[0], list) and "docker" in c.args[0] and "build" in c.args[0]
+        ]
+        assert len(clone_calls) == 1 # build should be performed
 
     # Check env file
     env_files = list(env_dir.glob("*.env"))
@@ -45,6 +50,38 @@ def test_build_creates_env_and_report(tmp_path):
     report_content = yaml.safe_load(report_files[0].read_text())
     assert "apps" in report_content
     assert report_content["apps"][0]["name"] == "app1"
+
+
+def test_build_skipped(tmp_path):
+    # Fake config
+    config_path = tmp_path / "apps.yaml"
+    config_data = {
+        "apps": [
+            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None, "ref": "main",
+             "build_cmd": "echo build_app1"}
+        ]
+    }
+    with open(config_path, "w") as f:
+        yaml.dump(config_data, f)
+
+    env_dir = tmp_path / "envs"
+    # Mock run_cmd to avoid running actual git/docker
+    with patch("composor.utils.git.run_cmd") as mock_run, \
+        patch("composor.build_manager.run_cmd") as mock_run2:
+        mock_run.return_value = "git-hash-123"
+        mock_run2.return_value = "git-hash-123"
+
+        build_manager.main([
+            "--config", str(config_path),
+            "--base-dir", str(tmp_path),
+            "--env-dir", str(env_dir),
+        ])
+        print(f"{mock_run2.call_args_list}")
+        clone_calls = [
+            c for c in mock_run2.call_args_list
+            if c.args and isinstance(c.args[0], list) and "docker" in c.args[0] and "build" in c.args[0]
+        ]
+        assert len(clone_calls) == 0 # build should be skipped
 
 
 def test_build_creates_env_and_report_dry(tmp_path):
