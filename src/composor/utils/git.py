@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 import logging
 
@@ -41,12 +40,12 @@ class GitRepo:
 
     def get_sha_head(self) -> str:
         if not self.dry:
-            result = subprocess.run(
+            result = run_cmd(
                 ["git", "-C", str(self.path), "rev-parse", "--short", "HEAD"],
                 capture_output=True,
                 text=True,
             )
-            git_hash = result.stdout.strip()
+            git_hash = result.strip()
         else:
             git_hash = "DRY"
         return git_hash
