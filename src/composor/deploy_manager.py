@@ -41,7 +41,7 @@ def check_docker_compose():
 
 def list_env_files(env_dir: Path) -> List[Path]:
     """Return sorted list of available env files."""
-    return sorted(env_dir.glob(".env.*"), key=os.path.getmtime)
+    return sorted(env_dir.glob("env_*.env"), key=os.path.getmtime)
 
 
 def get_env_file(
@@ -98,7 +98,9 @@ def main():
     parser.add_argument(
         "--rollback",
         type=int,
-        default=1,
+        nargs="?",
+        const=1,
+        default=None,
         help="Rollback index (1 = previous (default), 2 = before that, ...)",
     )
     parser.add_argument(
@@ -128,7 +130,8 @@ def main():
             print(f"{idx}: {e.name}")
         return
 
-    env_file = get_env_file(env_dir, args.rollback, args.file)
+    env_deploy = args.rollback if args.rollback else 0
+    env_file = get_env_file(env_dir, env_deploy, args.file)
     if not env_file:
         logger.error("No env file found.")
         return
