@@ -22,15 +22,6 @@ from .utils import run_cmd
 logger = logging.getLogger(__name__)
 
 
-def clone_or_update_repo(app, app_path: Path, dry=False) -> int:
-    repo_url = app["repo"]
-    ref = app["ref"]
-
-    repo = GitRepo(repo_url, app_path, dry=dry)
-
-    return repo.ensure_ref(ref)
-
-
 def image_exists(image_tag: str, dry: bool = False) -> bool:
     cmd = ["docker", "images", "-q", f"{image_tag}"]
     result = run_cmd(cmd, dry, capture_output=True)
@@ -39,8 +30,10 @@ def image_exists(image_tag: str, dry: bool = False) -> bool:
 
 def build_docker_image(app, app_path: Path, dry=False) -> str:
     app_name = app["name"]
+    ref = app["ref"]
 
     repo = GitRepo(app["repo"], app_path, dry=dry)
+    repo.ensure_ref(ref)
     git_hash = repo.get_sha_head()
 
     image_tag = f"{app_name}:{git_hash}"
@@ -125,7 +118,6 @@ def main(arg_list: Optional[list[str]] = None):
             app_path = Path(app["path"]).expanduser().resolve() / app["name"]
         else:
             app_path = Path(args.base_dir).expanduser().resolve() / app["name"]
-        clone_or_update_repo(app, app_path, dry=args.dry)
         image_tag = build_docker_image(app, app_path, dry=args.dry)
         app_images[app["name"]] = image_tag
 
