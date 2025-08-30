@@ -47,32 +47,28 @@ def build_docker_image(app, app_path: Path, dry=False) -> str:
     return image_tag
 
 
-def create_consolidated_env(app_images, env_dir, timestamp, dry=False) -> Path:
+def create_consolidated_env(apps, env_dir, timestamp, dry=False) -> Path:
     env_dir = Path(env_dir).expanduser().resolve()
     if not dry:
         env_dir.mkdir(parents=True, exist_ok=True)
     env_file = env_dir / f"env_{timestamp}.env"
 
     logger.info(f"Creating consolidated env file {env_file}")
-    lines = [f"{name.upper()}_IMAGE={tag}" for name, tag in app_images.items()]
+    lines = [f"{app['name'].upper()}_IMAGE={app['image_tag']}" for app in apps]
     if not dry:
         env_file.write_text("\n".join(lines) + "\n")
     return env_file
 
 
 def generate_consolidated_report(
-    app_images, env_file, timestamp, report_dir="./reports", dry=False
+    apps, env_file, timestamp, report_dir="./reports", dry=False
 ) -> Path:
     report_dir = Path(report_dir).resolve()
     if not dry:
         report_dir.mkdir(parents=True, exist_ok=True)
     report_file = report_dir / f"report_{timestamp}.yaml"
 
-    report_data = {
-        "timestamp": timestamp,
-        "env_file": str(env_file),
-        "apps": [{"name": name, "image_tag": tag} for name, tag in app_images.items()],
-    }
+    report_data = {"timestamp": timestamp, "env_file": str(env_file), "apps": apps}
 
     logger.info(f"Writing consolidated report to {report_file}")
     if not dry:
@@ -119,17 +115,17 @@ def main(arg_list: Optional[list[str]] = None):
         else:
             app_path = Path(args.base_dir).expanduser().resolve() / app["name"]
         image_tag = build_docker_image(app, app_path, dry=args.dry)
-        app_images[app["name"]] = image_tag
+        app["image_tag"] = image_tag
 
-    if not app_images:
+    if not config.get("apps"):
         logger.error(f"Config file {config_file} does not contain any app")
         sys.exit(1)
 
     env_file = create_consolidated_env(
-        app_images, args.env_dir, timestamp, dry=args.dry
+        config.get("apps"), args.env_dir, timestamp, dry=args.dry
     )
     generate_consolidated_report(
-        app_images, env_file, timestamp, report_dir=args.env_dir, dry=args.dry
+        config.get("apps"), env_file, timestamp, report_dir=args.env_dir, dry=args.dry
     )
 
 
