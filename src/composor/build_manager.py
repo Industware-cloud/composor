@@ -42,7 +42,11 @@ def build_docker_image(app, app_path: Path, dry=False) -> str:
         logger.info(f"Image {image_tag} already exists, skipping build.")
     else:
         logger.info(f"Building Docker image {image_tag}")
-        run_cmd(["docker", "build", "-t", image_tag, str(app_path)], dry)
+        cmd = ["docker", "build", "-t", image_tag]
+        if app.get("dockerfile"):
+            cmd.extend(["-f", app["dockerfile"]])
+        cmd.append(str(app_path))
+        run_cmd(cmd, dry)
 
     return image_tag
 
