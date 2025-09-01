@@ -40,13 +40,20 @@ def build_docker_image(app, app_path: Path, dry=False) -> str:
 
     if image_exists(image_tag, dry):
         logger.info(f"Image {image_tag} already exists, skipping build.")
-    else:
-        logger.info(f"Building Docker image {image_tag}")
-        cmd = ["docker", "build", "-t", image_tag]
-        if app.get("dockerfile"):
-            cmd.extend(["-f", app["dockerfile"]])
-        cmd.append(str(app_path))
-        run_cmd(cmd, dry)
+        return image_tag
+
+    logger.info(f"Building Docker image {image_tag}")
+    cmd = ["docker", "build", "-t", image_tag]
+    dockerfile = app.get("dockerfile")
+    if dockerfile:
+        df_path = Path(dockerfile)
+        if not df_path.is_absolute():
+            df_path = Path(app_path) / df_path
+        if not df_path.exists():
+            raise FileNotFoundError(f"Dockerfile not found: {df_path}")
+        cmd.extend(["-f", str(df_path)])
+    cmd.append(str(app_path))
+    run_cmd(cmd, dry)
 
     return image_tag
 

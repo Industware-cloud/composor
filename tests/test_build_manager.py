@@ -60,6 +60,12 @@ def test_build_with_dockerfile(tmp_path):
              "dockerfile": "Dockerfile-test",}
         ]
     }
+
+    app_path = tmp_path
+    os.mkdir(app_path / "app1")
+    rel_df = app_path / "app1" / "Dockerfile-test"
+    rel_df.write_text("FROM python:3.11")
+
     with open(config_path, "w") as f:
         yaml.dump(config_data, f)
 
@@ -78,9 +84,9 @@ def test_build_with_dockerfile(tmp_path):
 
         clone_calls = [
             c for c in mock_run2.call_args_list
-            if c.args and isinstance(c.args[0], list) and "docker" in c.args[0] and "build" in c.args[0] and "Dockerfile-test" in c.args[0]
+            if c.args and isinstance(c.args[0], list) and "docker" in c.args[0] and "build" in c.args[0] and str(rel_df) in c.args[0]
         ]
-        assert len(clone_calls) == 1 # build should be skipped
+        assert len(clone_calls) == 1
 
 
 def test_build_skipped(tmp_path):
