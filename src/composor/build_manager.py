@@ -17,7 +17,7 @@ from pathlib import Path
 from datetime import datetime
 
 from composor.utils.git import GitRepo
-from .utils import run_cmd
+from .utils import run_cmd, normalize_name
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def create_consolidated_env(apps, env_dir, timestamp, dry=False) -> Path:
     env_file = env_dir / f"env_{timestamp}.env"
 
     logger.info(f"Creating consolidated env file {env_file}")
-    lines = [f"{app['name'].upper()}_IMAGE={app['image_tag']}" for app in apps]
+    lines = [f"{normalize_name(app['name'])}_IMAGE={app['image_tag']}" for app in apps]
     if not dry:
         env_file.write_text("\n".join(lines) + "\n")
     return env_file

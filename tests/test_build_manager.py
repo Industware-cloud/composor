@@ -13,7 +13,7 @@ def test_build_creates_env_and_report(tmp_path):
     config_path = tmp_path / "apps.yaml"
     config_data = {
         "apps": [
-            {"name": "app1", "repo": "https://fake.repo/app1.git", "path": None, "ref": "main"}
+            {"name": "app-1", "repo": "https://fake.repo/app1.git", "path": None, "ref": "main"}
         ]
     }
     with open(config_path, "w") as f:
@@ -42,14 +42,14 @@ def test_build_creates_env_and_report(tmp_path):
     env_files = list(env_dir.glob("*.env"))
     assert len(env_files) == 1
     env_content = env_files[0].read_text()
-    assert "APP1_IMAGE" in env_content
+    assert "APP_1_IMAGE" in env_content
 
     # Check report file
     report_files = list(env_dir.glob("*.yaml"))
     assert len(report_files) == 1
     report_content = yaml.safe_load(report_files[0].read_text())
     assert "apps" in report_content
-    assert report_content["apps"][0]["name"] == "app1"
+    assert report_content["apps"][0]["name"] == "app-1"
 
 def test_build_with_dockerfile(tmp_path):
     # Fake config
