@@ -37,7 +37,7 @@ def check_docker_compose():
 
 def list_env_files(env_dir: Path) -> List[Path]:
     """Return sorted list of available env files."""
-    return sorted(env_dir.glob("env_*.env"), key=os.path.getmtime)
+    return sorted(env_dir.glob("env_*.env"), reverse=True)
 
 
 def get_env_file(
