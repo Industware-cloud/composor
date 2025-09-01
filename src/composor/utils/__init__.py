@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -34,3 +35,18 @@ def run_cmd(
     if capture_output:
         return result.stdout.strip()
     return result.returncode
+
+
+def normalize_name(name: str) -> str:
+    """
+    Normalize app name so it is safe for environment variables:
+    - Replace spaces and dashes with underscores
+    - Remove invalid characters
+    - Uppercase everything
+    """
+    # Replace spaces and dashes with underscores
+    norm = re.sub(r"[\s\-]+", "_", name)
+    # Remove anything not alphanumeric or underscore
+    norm = re.sub(r"[^0-9A-Za-z_]", "", norm)
+    # Ensure it’s uppercase for ENV style
+    return norm.upper()
