@@ -57,8 +57,8 @@ def get_env_file(
 
     if index is not None:
         if 0 <= index < len(env_files):
-            return env_files[-(index + 1)]  # rollback
-        logger.error("Invalid rollback index")
+            return env_files[index]
+        logger.error("Invalid deployment index")
         return None
 
     return env_files[-1]  # latest
