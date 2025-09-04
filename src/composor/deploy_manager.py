@@ -93,7 +93,7 @@ def deploy(
         run_cmd(cmd)
 
 
-def main():
+def main(arg_list: Optional[list[str]] = None):
     parser = argparse.ArgumentParser(description="Deploy Manager")
     parser.add_argument(
         "--env-dir", default=".", help="Directory containing .env.* files"
@@ -126,7 +126,7 @@ def main():
 
     parser.add_argument("--list", action="store_true", help="List available env files")
     parser.add_argument("--dry", action="store_true", help="Dry run mode")
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     env_dir = Path(args.env_dir)
     envs = list_env_files(env_dir)
