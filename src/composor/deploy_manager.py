@@ -156,6 +156,14 @@ def main(arg_list: Optional[list[str]] = None):
         help="Rollback index (1 = previous (default), 2 = before that, ...)",
     )
     parser.add_argument(
+        "--switch",
+        type=int,
+        nargs="?",
+        const=1,
+        default=None,
+        help="Deploy based on index",
+    )
+    parser.add_argument(
         "--compose",
         nargs="+",
         default=["docker-compose.yml"],
@@ -187,6 +195,10 @@ def main(arg_list: Optional[list[str]] = None):
         logger.error("--reason is required when --rollback")
         return
 
+    if args.rollback and args.switch:
+        logger.error("--rollback and --switch are mutually exclusive")
+        return
+
     env_dir = Path(args.env_dir)
     envs = list_env_files(env_dir)
     if not envs:
@@ -200,6 +212,7 @@ def main(arg_list: Optional[list[str]] = None):
         return
 
     env_deploy = args.rollback if args.rollback else 0
+    env_deploy = args.switch if args.switch else env_deploy
     env_file = get_env_file(
         env_dir,
         env_deploy,
