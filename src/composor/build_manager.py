@@ -14,10 +14,9 @@ from typing import Optional
 
 import yaml
 from pathlib import Path
-from datetime import datetime
 
 from composor.utils.git import GitRepo
-from .utils import run_cmd, normalize_name
+from .utils import run_cmd, normalize_name, get_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +117,7 @@ def main(arg_list: Optional[list[str]] = None):
         config = yaml.safe_load(f)
 
     app_images = {}
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = get_timestamp()
     for app in config.get("apps", []):
         # Determine app_path
         if "path" in app and app["path"]:
