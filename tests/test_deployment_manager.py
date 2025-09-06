@@ -37,9 +37,28 @@ def test_rollback(tmp_path):
 
         deploy_manager.main([
             "--env-dir", str(env_dir),
-            "--rollback",
+            "--reason", "reason of rollback",
+            "--rollback"
         ])
         print(f"{mock_run2.call_args_list}")
 
         assert str(Path(env_dir, env_files[-1])) in mock_run2.call_args_list[0].args[0]
-    assert deploy_manager.get_env_file(env_dir).name == env_files[-1]
+    assert deploy_manager.get_env_file(env_dir, 0).name == env_files[-1]
+
+def test_rollback2(tmp_path):
+    env_dir = setup_env_dir(tmp_path)
+
+    with patch("composor.utils.git.run_cmd") as mock_run, \
+                patch("composor.deploy_manager.run_cmd") as mock_run2:
+        mock_run.return_value = "git-hash-123"
+        mock_run2.return_value = ""
+
+        deploy_manager.main([
+            "--env-dir", str(env_dir),
+            "--reason", "reason of rollback",
+            "--rollback", "2"
+        ])
+
+        assert len(mock_run2.call_args_list) == 0
+    assert len(list(env_dir.glob("env_*.env"))) == 0
+    assert len(list(env_dir.glob("env_*.env.defect"))) == 2
