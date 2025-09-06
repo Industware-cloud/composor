@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import re
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -50,3 +51,7 @@ def normalize_name(name: str) -> str:
     norm = re.sub(r"[^0-9A-Za-z_]", "", norm)
     # Ensure it’s uppercase for ENV style
     return norm.upper()
+
+
+def get_timestamp() -> str:
+    return datetime.now().strftime("%Y%m%d%H%M%S")
